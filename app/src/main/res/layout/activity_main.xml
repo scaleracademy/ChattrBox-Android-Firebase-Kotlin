@@ -34,5 +34,30 @@
             android:layout_gravity="center"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
+    <LinearLayout
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <Button
+                android:layout_marginHorizontal="5dp"
+                android:enabled="false"
+                android:id="@+id/resetButton"
+                android:text="RESET"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        <Button
+                android:layout_marginHorizontal="5dp"
+                android:enabled="false"
+                android:id="@+id/verifyOtpButton"
+                android:text="Verify OTP"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+    </LinearLayout>
+
 
 </LinearLayout>
