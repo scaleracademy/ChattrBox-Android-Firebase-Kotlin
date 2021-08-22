@@ -35,6 +35,10 @@ class PhoneLoginActivity : AppCompatActivity() {
         _binding = ActivityPhoneLoginBinding.inflate(layoutInflater)
         setContentView(_binding.root)
 
+        if (auth.currentUser != null) {
+            startActivity(Intent(this, ChatActivity::class.java))
+        }
+
         _binding.phoneLoginButton.setOnClickListener {
             val options = PhoneAuthOptions.newBuilder(auth)
                 .setPhoneNumber("+914567845678")       // Phone number to verify
