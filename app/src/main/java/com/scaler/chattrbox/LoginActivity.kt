@@ -1,39 +1,44 @@
 package com.scaler.chattrbox
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.*
-import com.scaler.chattrbox.databinding.ActivityMainBinding
+import com.scaler.chattrbox.databinding.ActivityLoginBinding
 import java.util.concurrent.TimeUnit
 
-class MainActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity() {
     companion object {
         const val TAG = "AUTH"
     }
 
-    private lateinit var _binding: ActivityMainBinding
+    private lateinit var _binding: ActivityLoginBinding
     private val auth = FirebaseAuth.getInstance()
     private val loginCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
-        override fun onVerificationCompleted(p0: PhoneAuthCredential) {
-            Toast.makeText(this@MainActivity, "VERIFICATION COMPLETED", Toast.LENGTH_SHORT).show()
+        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+            Toast.makeText(this@LoginActivity, "VERIFICATION COMPLETED", Toast.LENGTH_SHORT).show()
+            auth.signInWithCredential(credential)
         }
 
         override fun onVerificationFailed(p0: FirebaseException) {
-            Toast.makeText(this@MainActivity, "VERIFICATION FAILED", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@LoginActivity, "VERIFICATION FAILED", Toast.LENGTH_SHORT).show()
         }
 
-        override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-            Toast.makeText(this@MainActivity, "VERIFICATION CODE SENT", Toast.LENGTH_SHORT).show()
+        override fun onCodeSent(
+            verificationId: String,
+            token: PhoneAuthProvider.ForceResendingToken
+        ) {
+            Toast.makeText(this@LoginActivity, "VERIFICATION CODE SENT", Toast.LENGTH_SHORT).show()
             updateUIState(UIState.ENTER_OTP)
 
             _binding.verifyOtpButton.setOnClickListener {
                 val credential = PhoneAuthProvider.getCredential(
-                        verificationId,
-                        _binding.otpEditText.text.toString()
+                    verificationId,
+                    _binding.otpEditText.text.toString()
                 )
                 signInWithPhoneAuthCredential(credential)
 
@@ -44,8 +49,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        _binding = ActivityMainBinding.inflate(layoutInflater)
+        if (auth.currentUser != null) {
+            goToProfileScreen()
+        }
+
+        _binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(_binding.root)
+
 
         _binding.phoneLoginButton.setOnClickListener {
             initiatePhoneLogin(_binding.phoneNumberEditText.text.toString())
@@ -53,17 +63,15 @@ class MainActivity : AppCompatActivity() {
         _binding.resetButton.setOnClickListener {
             updateUIState(UIState.ENTER_PHONE)
         }
-
-
     }
 
     fun initiatePhoneLogin(phoneNumber: String) {
         val options = PhoneAuthOptions.newBuilder(auth)
-                .setPhoneNumber(phoneNumber)       // Phone number to verify
-                .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
-                .setActivity(this)                 // Activity (for callback binding)
-                .setCallbacks(loginCallbacks)          // OnVerificationStateChangedCallbacks
-                .build()
+            .setPhoneNumber(phoneNumber)       // Phone number to verify
+            .setTimeout(60L, TimeUnit.SECONDS) // Timeout and unit
+            .setActivity(this)                 // Activity (for callback binding)
+            .setCallbacks(loginCallbacks)          // OnVerificationStateChangedCallbacks
+            .build()
         PhoneAuthProvider.verifyPhoneNumber(options)
     }
 
@@ -102,22 +110,26 @@ class MainActivity : AppCompatActivity() {
     private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
 
         auth.signInWithCredential(credential)
-                .addOnCompleteListener(this) { task ->
+            .addOnCompleteListener(this) { task ->
 
-                    if (task.isSuccessful) {
-                        Toast.makeText(this, "LOGIN SUCCESSFUL", Toast.LENGTH_SHORT).show()
-                        val user = task.result?.user
-                        // TODO: move to the chat screen
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "LOGIN SUCCESSFUL", Toast.LENGTH_SHORT).show()
+                    val user = task.result?.user
+                    goToProfileScreen()
 
-                    } else {
-                        Toast.makeText(this, "LOGIN FAILED", Toast.LENGTH_SHORT).show()
-                        if (task.exception is FirebaseAuthInvalidCredentialsException) {
-                            Toast.makeText(this, "WRONG OTP", Toast.LENGTH_SHORT).show()
-                        }
-                        updateUIState(UIState.ENTER_PHONE)
-
+                } else {
+                    Toast.makeText(this, "LOGIN FAILED", Toast.LENGTH_SHORT).show()
+                    if (task.exception is FirebaseAuthInvalidCredentialsException) {
+                        Toast.makeText(this, "WRONG OTP", Toast.LENGTH_SHORT).show()
                     }
+                    updateUIState(UIState.ENTER_PHONE)
+
                 }
+            }
+    }
+
+    fun goToProfileScreen() {
+        startActivity(Intent(this, ProfileActivity::class.java))
     }
 
 }
